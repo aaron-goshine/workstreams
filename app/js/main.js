@@ -24,7 +24,7 @@ var usersConfig = [
   },
   {
     'name': 'Udaya Lekkala',
-    'nickname': 'day day',
+    'nickname': 'Bujji',
     'initial': 'UL',
     'id': 'id03'
 
@@ -38,7 +38,7 @@ var usersConfig = [
   },
   {
     'name': 'Chris Gordon',
-    'nickname': 'young wizzard',
+    'nickname': 'Young wizzard',
     'initial': 'CG',
     'id': 'id05'
 
@@ -51,6 +51,16 @@ var usersConfig = [
 
   }
 ];
+//
+// function addDashBorder (elemntList) {
+//   elemntList.forEach(function (item) {
+//     streamList.style.border = '';
+//   });
+// }
+//
+// function removeDashBorder () {
+//
+// }
 
 function drag (event) {
   event.preventDefault();

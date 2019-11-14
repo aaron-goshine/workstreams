@@ -3,11 +3,28 @@
   <head>  
     <meta charset="UTF-8">
     <title>Streams</title>
-    <script src="js/jquery-3.4.1.js"></script>
-    <script src="js/main.js"></script>
     <link rel="stylesheet" type="text/css" href="css/main.css">
   </head>
   <body>
+    <section>
+      <header class="main-header" >
+        <h1>Welcome to...,</h1>
+        <nav>
+          <ul>
+            <li>Add player</li>
+            <li>Edit streams</li>
+          </ul>
+        </nav>
+      </header>
+      <content class="grid-container" >
+        <section class="col" id="streams-list"> </section>
+        <section class="col" id="day1"> </section>
+        <section class="col" id="day2"> </section>
+        <section class="col" id="day3"> </section>
+        <section class="col" id="day4"> </section>
+        <section class="col" id="day5"> </section>
+      </content>
+    </section>
 
     <template id="person">
       <div class="person" draggable="true">
@@ -28,19 +45,17 @@
     </template>
 
 
-    <section>
-      <header>
-        <h1>Welcome to...,</h1>
-      </header>
-      <content class="grid-container" >
-        <section class="col" id="streams-list"> </section>
-        <section class="col" id="day1"> </section>
-        <section class="col" id="day2"> </section>
-        <section class="col" id="day3"> </section>
-        <section class="col" id="day4"> </section>
-        <section class="col" id="day5"> </section>
-      </content>
-    </section>
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <!-- <script src="/__/firebase/7.3.0/firebase&#45;app.js"></script> -->
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+      https://firebase.google.com/docs/web/setup#available-libraries -->
+      <!-- <script src="/__/firebase/7.3.0/firebase&#45;analytics.js"></script> -->
+
+      <!-- Initialize Firebase -->
+      <!-- <script src="/__/firebase/init.js"></script> -->
+    <script src="js/jquery-3.4.1.js"></script>
+    <script src="js/main.js"></script>
   </body>
 </html>
 

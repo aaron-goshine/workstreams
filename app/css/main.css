@@ -4,6 +4,22 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.main-header {
+  padding: 1em;
+}
+
+.main-header nav ul {
+  background-color: #ededed;
+}
+
+.main-header nav ul li {
+  list-style: none;
+  display: inline-block;
+  padding: 1em;
+  line-height: 2em;
+  font-size: 1em;
+}
+
 .col {
   border: 1px solid;
 }
@@ -11,13 +27,13 @@
 .grid-container {
   display: grid;
   grid-template-columns: auto auto auto auto auto auto;
-  background-color: #9f9f9f;
+  background-color: #ededed;
   padding: 1em;
 }
 
 .col {
-  background-color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.8);
+  background-color: #fcfcfc;
+  border: 1px solid #d0d0d0;
   padding: 1em;
   font-size: 1em;
 }
@@ -27,7 +43,7 @@
 }
 
 .stream-unit {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.8);
+  border-bottom: 1px solid #d0d0d0;
   height: 10em;
   padding: 1em;
   position: relative;
