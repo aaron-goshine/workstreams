@@ -1,66 +1,32 @@
-/* global  */
+/* global state  */
 
 var lastDraggedItem;
 
-var streamConfig = [
-  { 'name': 'Payment service', 'initial': 'PS' },
-  { 'name': 'Payment Gateway (paypal)', 'initial': 'PG' },
-  { 'name': 'Payment Gateway (card)', 'initial': 'PG' },
-  { 'name': 'Business as usual', 'initial': 'BAU' }
-];
+function addDashBorder () {
+  document.querySelectorAll('.dropbox')
+    .forEach(function (item) {
+      item.style.border = '1px dashed #6d6';
+    });
+}
 
-var usersConfig = [
-  {
-    'name': 'Aaron Goshine',
-    'nickname': 'Grand master G',
-    'initial': 'AG',
-    'id': 'id-01'
-  },
-  {
-    'name': 'Hemanth Narravula',
-    'nickname': 'Heman',
-    'initial': 'HN',
-    'id': 'id02'
-  },
-  {
-    'name': 'Udaya Lekkala',
-    'nickname': 'Bujji',
-    'initial': 'UL',
-    'id': 'id03'
+function removeDashBorder () {
+  document.querySelectorAll('.dropbox')
+    .forEach(function (item) {
+      item.style.border = 'none';
+      item.style.borderBottom = '1px solid  #d3d3d3';
+    });
+}
 
-  },
-  {
-    'name': 'Prasanjit Mohanty',
-    'nickname': 'Jit',
-    'initial': 'PM',
-    'id': 'id04'
-
-  },
-  {
-    'name': 'Chris Gordon',
-    'nickname': 'Young wizzard',
-    'initial': 'CG',
-    'id': 'id05'
-
-  },
-  {
-    'name': 'Chathura Fernando ',
-    'nickname': 'Nandos',
-    'initial': 'CH',
-    'id': 'id06'
-
-  }
-];
-//
-// function addDashBorder (elemntList) {
-//   elemntList.forEach(function (item) {
-//     streamList.style.border = '';
-//   });
-// }
-//
-// function removeDashBorder () {
-//
-// }
+function getUserForPositions (ids) {
+  return ids.map(function (id) {
+    var match = state.usersConfig.filter(function (user) {
+      return user.id === id;
+    });
+    if (match.length > 0) {
+      return match[0];
+    }
+  });
+}
 
 function drag (event) {
   event.preventDefault();
@@ -69,7 +35,7 @@ function drag (event) {
 
 function drop (event) {
   event.preventDefault();
-  var pattern = new RegExp('stream-unit', 'g');
+  var pattern = new RegExp('dropbox', 'g');
   if (event.target.className.match(pattern)) {
     event.target.appendChild(lastDraggedItem);
   }
@@ -83,32 +49,38 @@ window.onload = function () {
   var personTpl = document.querySelector('#person');
   var streamInfoTpl = document.querySelector('#stream-info');
   var streamBoxTpl = document.querySelector('#stream-boxes');
-
-  streamConfig.forEach(function (item) {
+  state.streamConfig.forEach(function (item) {
     var streamInfoContent = document.importNode(streamInfoTpl.content, true);
     streamInfoContent.querySelectorAll('h4')[0].textContent = item.initial;
     var streamList = document.querySelector('#streams-list');
     streamList.appendChild(streamInfoContent);
   });
 
-  for (let i = 1; i < 6; i++) {
-    streamConfig.forEach(function (item) {
+  for (let i = 0; i < 5; i++) {
+    state.streamConfig.forEach(function (stream, index) {
       var streamBoxContent = document.importNode(streamBoxTpl.content, true);
-      document.querySelector('#day' + i).appendChild(streamBoxContent);
+      var users = getUserForPositions(stream.positions[i]);
+
+      users.forEach(function (user) {
+        var personContent = document.importNode(personTpl.content, true);
+        personContent.querySelectorAll('.person')[0].setAttribute('id', user.id);
+        personContent.querySelectorAll('h4')[0].textContent = user.initial;
+        streamBoxContent.querySelectorAll('.stream-unit')[0].appendChild(personContent);
+      });
+
+      document.querySelector('#day' + (i + 1)).appendChild(streamBoxContent);
     });
   }
-
-  usersConfig.forEach(function (user) {
-    var personContent = document.importNode(personTpl.content, true);
-    personContent.querySelectorAll('.person')[0].setAttribute('id', user.id);
-    personContent.querySelectorAll('h4')[0].textContent = user.initial;
-    var streamList = document.querySelector('#day1 > div:nth-child(1)');
-    streamList.appendChild(personContent);
-  });
 
   document.querySelectorAll('.person')
     .forEach(function (item) {
       item.addEventListener('drag', drag);
+      item.addEventListener('dragstart', function () {
+        addDashBorder();
+      });
+      item.addEventListener('dragend', function () {
+        removeDashBorder();
+      });
     });
 
   document.querySelectorAll('.stream-unit')
