@@ -1,7 +1,7 @@
 module.exports = { usersConfig: [
   {
     'name': 'Aaron Goshine',
-    'nickname': 'Grand master G',
+    'nickname': 'Gosh',
     'initial': 'AG',
     'id': 'id01'
   },
@@ -27,7 +27,7 @@ module.exports = { usersConfig: [
   },
   {
     'name': 'Chris Gordon',
-    'nickname': 'Young wizzard',
+    'nickname': 'Wizzard',
     'initial': 'CG',
     'id': 'id05'
 
@@ -42,17 +42,17 @@ module.exports = { usersConfig: [
 ],
 
 streamConfig: [
-  { 'name': 'Payment service',
-    'initial': 'PS',
-    'positions': [ [ ], [], [], [], ['id01', 'id02'] ]
+  { 'name': 'Payment Option',
+    'initial': 'PP',
+    'positions': [ [ ], [], [], ['id05', 'id06'], [] ]
   },
-  { 'name': 'Payment Gateway (paypal)',
-    'initial': 'PG',
-    'positions': [ [], ['id04', 'id05'], [], [], [] ]
+  { 'name': 'Payment Execute',
+    'initial': 'PP',
+    'positions': [ [], [], [], [], ['id04'] ]
   },
-  { 'name': 'Payment Gateway (card)',
-    'initial': 'PG',
-    'positions': [ [], ['id03', 'id06'], [], [], [] ]
+  { 'name': 'Secret management',
+    'initial': 'SM',
+    'positions': [ [], ['id01', 'id02', 'id03'], [], [], [] ]
   },
   { 'name': 'Business as usual',
     'initial': 'BAU',

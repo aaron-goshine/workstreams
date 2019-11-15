@@ -62,6 +62,13 @@
   display: inline-block;
 }
 
+.nickname {
+  font-size: 10px;
+  line-height: 4px;
+  position: relative;
+  top: -10px;
+}
+
 #day2 .person {
   background: #ffc;
 }

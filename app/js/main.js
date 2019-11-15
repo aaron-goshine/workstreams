@@ -64,6 +64,7 @@ function renderApplication (state) {
         var personContent = document.importNode(personTpl.content, true);
         personContent.querySelectorAll('.person')[0].setAttribute('id', user.id);
         personContent.querySelectorAll('h4')[0].textContent = user.initial;
+        personContent.querySelectorAll('.nickname')[0].textContent = user.nickname;
         streamBoxContent.querySelectorAll('.stream-unit')[0].appendChild(personContent);
       });
 
