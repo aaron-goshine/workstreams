@@ -42,19 +42,19 @@ module.exports = { usersConfig: [
 ],
 
 streamConfig: [
-  { 'name': 'Payment Option',
+  { 'description': 'Payment Option',
     'initial': 'PP',
     'positions': [ [ ], [], [], ['id05', 'id06'], [] ]
   },
-  { 'name': 'Payment Execute',
+  { 'description': 'Payment Execute',
     'initial': 'PP',
     'positions': [ [], [], [], [], ['id04'] ]
   },
-  { 'name': 'Secret management',
+  { 'description': 'Secret management',
     'initial': 'SM',
     'positions': [ [], ['id01', 'id02', 'id03'], [], [], [] ]
   },
-  { 'name': 'Business as usual',
+  { 'description': 'Business as usual',
     'initial': 'BAU',
     'positions': [ [], [], [], [], [] ]
   }

@@ -48,9 +48,10 @@ function renderApplication (state) {
   var personTpl = document.querySelector('#person');
   var streamInfoTpl = document.querySelector('#stream-info');
   var streamBoxTpl = document.querySelector('#stream-boxes');
-  state.streamConfig.forEach(function (item) {
+  state.streamConfig.forEach(function (stream) {
     var streamInfoContent = document.importNode(streamInfoTpl.content, true);
-    streamInfoContent.querySelectorAll('h4')[0].textContent = item.initial;
+    streamInfoContent.querySelectorAll('h4')[0].textContent = stream.initial;
+    streamInfoContent.querySelectorAll('.description')[0].textContent = stream.description;
     var streamList = document.querySelector('#streams-list');
     streamList.appendChild(streamInfoContent);
   });
