@@ -1,7 +1,5 @@
-/* global state  */
-
-var lastDraggedItem;
-
+window.streams = {};
+window.streams.lastDraggedItem = null;
 function addDashBorder () {
   document.querySelectorAll('.dropbox')
     .forEach(function (item) {
@@ -19,7 +17,7 @@ function removeDashBorder () {
 
 function getUserForPositions (ids) {
   return ids.map(function (id) {
-    var match = state.usersConfig.filter(function (user) {
+    var match = window.streams.state.usersConfig.filter(function (user) {
       return user.id === id;
     });
     if (match.length > 0) {
@@ -30,22 +28,23 @@ function getUserForPositions (ids) {
 
 function drag (event) {
   event.preventDefault();
-  lastDraggedItem = document.getElementById(event.target.id);
+  window.streams.lastDraggedItem = document.getElementById(event.target.id);
 }
 
 function drop (event) {
   event.preventDefault();
   var pattern = new RegExp('dropbox', 'g');
   if (event.target.className.match(pattern)) {
-    event.target.appendChild(lastDraggedItem);
+    event.target.appendChild(window.streams.lastDraggedItem);
   }
-  lastDraggedItem = null;
+  window.streams.lastDraggedItem = null;
 }
 
 function allowDrop (ev) {
   ev.preventDefault();
 }
-window.onload = function () {
+
+function renderApplication (state) {
   var personTpl = document.querySelector('#person');
   var streamInfoTpl = document.querySelector('#stream-info');
   var streamBoxTpl = document.querySelector('#stream-boxes');
@@ -88,4 +87,17 @@ window.onload = function () {
       item.addEventListener('drop', drop);
       item.addEventListener('dragover', allowDrop);
     });
+}
+
+window.onload = function () {
+  function reqListener () {
+    var state = JSON.parse(this.responseText);
+    window.streams.state = state;
+    renderApplication(state);
+  }
+
+  var oReq = new XMLHttpRequest();
+  oReq.addEventListener('load', reqListener);
+  oReq.open('GET', '/state');
+  oReq.send();
 };
