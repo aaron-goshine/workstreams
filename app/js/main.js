@@ -15,17 +15,6 @@ function removeDashBorder () {
     });
 }
 
-function getUserForPositions (ids) {
-  return ids.map(function (id) {
-    var match = window.streams.state.usersConfig.filter(function (user) {
-      return user.id === id;
-    });
-    if (match.length > 0) {
-      return match[0];
-    }
-  });
-}
-
 function drag (event) {
   event.preventDefault();
   window.streams.lastDraggedItem = document.getElementById(event.target.id);
@@ -35,6 +24,11 @@ function drop (event) {
   event.preventDefault();
   var pattern = new RegExp('dropbox', 'g');
   if (event.target.className.match(pattern)) {
+    var newState = {
+      'position': event.target.getAttribute('data-position'),
+      'userId': window.streams.lastDraggedItem.getAttribute('id')
+    };
+    updateUserPosition(newState);
     event.target.appendChild(window.streams.lastDraggedItem);
   }
   window.streams.lastDraggedItem = null;
@@ -42,6 +36,27 @@ function drop (event) {
 
 function allowDrop (ev) {
   ev.preventDefault();
+}
+
+function upateState (newState) {
+  var oReq = new XMLHttpRequest();
+  oReq.addEventListener('load', function (response) {
+    console.log(response);
+    console.log(this.responseText);
+  });
+  oReq.open('POST', '/state');
+  oReq.send(JSON.stringify(newState));
+};
+
+function updateUserPosition (newState) {
+  var updatedUsersConfig = window.streams.state.usersConfig.map(function (user) {
+    if (user.id === newState.userId) {
+      user.currentPosition = newState.position;
+    }
+    return user;
+  });
+  window.streams.state.usersConfig = updatedUsersConfig;
+  upateState(window.streams.state);
 }
 
 function renderApplication (state) {
@@ -59,7 +74,12 @@ function renderApplication (state) {
   for (let i = 0; i < 5; i++) {
     state.streamConfig.forEach(function (stream, index) {
       var streamBoxContent = document.importNode(streamBoxTpl.content, true);
-      var users = getUserForPositions(stream.positions[i]);
+      var currentPosition = (i + ',' + index);
+      streamBoxContent.querySelectorAll('.dropbox')[0].setAttribute('data-position', currentPosition);
+
+      var users = window.streams.state.usersConfig.filter(function (user) {
+        return user.currentPosition === currentPosition;
+      });
 
       users.forEach(function (user) {
         var personContent = document.importNode(personTpl.content, true);
@@ -68,7 +88,6 @@ function renderApplication (state) {
         personContent.querySelectorAll('.nickname')[0].textContent = user.nickname;
         streamBoxContent.querySelectorAll('.stream-unit')[0].appendChild(personContent);
       });
-
       document.querySelector('#day' + (i + 1)).appendChild(streamBoxContent);
     });
   }
