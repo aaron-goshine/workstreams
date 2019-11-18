@@ -1,21 +1,24 @@
 var express = require('express');
 var app = express();
 var port = process.env.PORT || 3000;
+var tempState = require('./state');
 
-var state = require('./state');
+const { Client } = require('pg');
+const connectionString = process.env.DATABASE_URL;
+const client = new Client({ connectionString: connectionString, ssl: false });
+client.connect();
 
 app.use(express.static('./app'));
 app.get('/state', function (req, res) {
-  console.log(`
-  --------GET STATE-----------
-  Need to connect to the database and retrieve
-  the latest state (sorted by timestamps)
-  and return it to the client`);
-  // DATA ROW
-  // create DATE, state JSON, id INTEGER
-  // return JSON.parse (state)
-
-  res.json(state);
+  res.json(tempState);
+  client.query('SELECT * FROM streams LIMIT 1 order by created DESC',
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      res.json(results);
+    });
 });
 
 app.post('/state', function (req, res) {
@@ -24,17 +27,11 @@ app.post('/state', function (req, res) {
     state += chunk;
   });
 
-  req.on('end', function () {
-    console.log(`
-  --------PUT STATE-----------
-  Need to connect to database and create an entry
-  for the current timestamps`);
-    // DATA ROW
-    // INSERT INTO state (create DATE, state JSON, id INTEGER),
-    // NOW(), state, auto increment;
-    console.log('--------STATE----------');
+  req.on('end', async function () {
     console.log(state);
-    res.send('{"message": "saved"');
+    await client.query('INSERT INTO streams (created, state) values($1, $2)',
+      [Date.now(), state]);
+    res.send('{"message": "successfully updated"');
   });
 });
 
