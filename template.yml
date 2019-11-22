@@ -1,0 +1,98 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  workstreams
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+- AWS::Serverless-2016-10-31
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+  # This is a Lambda function config associated with the source code: get-all-items.js
+  GetAllItemsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/get-state.handler
+      Runtime: nodejs10.x
+      MemorySize: 128
+      Timeout: 100
+      Description: An HTTP get method to get all latest state from a DynamoDB table.
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the WorkStreamsTables
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkStreamsTables
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          WORK_STREAMS_TABLE: !Ref WorkStreamsTables
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /state
+            Method: GET
+  # This is a Lambda function config associated with the source code: get-by-id.js
+  GetUiHTMLFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/get-ui.handler
+      Runtime: nodejs10.x
+      MemorySize: 128
+      Timeout: 100
+      Description: An HTTP get method to return the ui.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+
+  # This is a Lambda function config associated with the source code: put-item.js
+  SaveStateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/save-state.handler
+      Runtime: nodejs10.x
+      MemorySize: 128
+      Timeout: 100
+      Description: An HTTP post method to save state DynamoDB table.
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkStreamsTables
+      Environment:
+        Variables:
+          WORK_STREAMS_TABLE: !Ref WorkStreamsTables
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /state
+            Method: POST
+  # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
+
+  # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
+  WorkStreamsTables:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+
+Outputs:
+  WebEndpoint:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
