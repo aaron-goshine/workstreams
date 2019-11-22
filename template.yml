@@ -17,35 +17,10 @@ Transform:
 Resources:
   # Each Lambda function is defined by properties:
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-
-  # This is a Lambda function config associated with the source code: get-all-items.js
-  GetAllItemsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: src/handlers/get-state.handler
-      Runtime: nodejs10.x
-      MemorySize: 128
-      Timeout: 100
-      Description: An HTTP get method to get all latest state from a DynamoDB table.
-      Policies:
-        # Give Create/Read/Update/Delete Permissions to the WorkStreamsTables
-        - DynamoDBCrudPolicy:
-            TableName: !Ref WorkStreamsTables
-      Environment:
-        Variables:
-          # Make table name accessible as environment variable from function code during execution
-          WORK_STREAMS_TABLE: !Ref WorkStreamsTables
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /state
-            Method: GET
-  # This is a Lambda function config associated with the source code: get-by-id.js
   GetUiHTMLFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/get-ui.handler
+      Handler: streams-ui/app.handler
       Runtime: nodejs10.x
       MemorySize: 128
       Timeout: 100
@@ -57,11 +32,33 @@ Resources:
             Path: /
             Method: GET
 
-  # This is a Lambda function config associated with the source code: put-item.js
+
+  # This is a Lambda function config associated with the source code: get-all-items.js
+  GetAllItemsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: streams-get/app.handler
+      Runtime: nodejs10.x
+      MemorySize: 128
+      Timeout: 100
+      Description: An HTTP get method to get all latest state from a DynamoDB table.
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkStreamsTables
+      Environment:
+        Variables:
+          WORK_STREAMS_TABLE: !Ref WorkStreamsTables
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /state
+            Method: GET
+
   SaveStateFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/save-state.handler
+      Handler: streams-save/app.handler 
       Runtime: nodejs10.x
       MemorySize: 128
       Timeout: 100

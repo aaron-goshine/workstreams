@@ -7,12 +7,22 @@ exports.handler = async (event) => {
   let jsCode = fs.readFileSync(path.join(__dirname, 'main.js')).toString();
   let htmlTemplate = fs.readFileSync(path.join(__dirname, 'index.html')).toString();
 
-  htmlTemplate = htmlTemplate.replace('{{js}}', jsCode);
-  htmlTemplate = htmlTemplate.replace('{{css}}', cssCode);
-  console.log(htmlTemplate);
+  cssCode = cssCode.replace(/[\n\r]+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^\s+|\s+$/g, '');
+
+  jsCode = jsCode.replace(/[\n\r]+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^\s+|\s+$/g, '');
+
+  htmlTemplate = htmlTemplate.replace(/[\n\r]+/g, ' ')
+    .replace('{{js}}', jsCode)
+    .replace('{{css}}', cssCode);
+
   const response = {
     statusCode: 200,
-    body: JSON.stringify(htmlTemplate)
+    headers: { 'Content-Type': 'text/html' },
+    body: htmlTemplate
   };
   return response;
 };
