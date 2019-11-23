@@ -1,43 +1,40 @@
-// Create clients and set shared const values outside of the handler.
-
-// Create a DocumentClient that represents the query to add an item
-const dynamodb = require('aws-sdk/clients/dynamodb');
-const docClient = new dynamodb.DocumentClient();
-
-// Get the DynamoDB table name from environment variables
+var AWS = require('aws-sdk');
+AWS.config.update({ region: process.env.REGION });
+var ddb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
 const tableName = process.env.WORK_STREAMS_TABLE;
 
-/**
- * A simple example includes a HTTP post method to add one item to a DynamoDB table.
- */
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    throw new Error(`postMethod only accepts POST method, you tried: ${event.httpMethod} method.`);
-  }
-  // All log statements are written to CloudWatch
-  console.info('received:', event);
-
-  // Get id and name from the body of the request
-  const body = JSON.parse(event.body);
-
-  // Creates a new item, or replaces an old item with a new item
-  // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#put-property
-  var params = {
+  let lastState;
+  await ddb.getItem({
+    Key: { state: { S: 'latest' } },
+    TableName: tableName
+  })
+    .promise()
+    .then(async function (data) {
+      console.log('data', data);
+      console.log('Retrieved state from DynamoDB');
+      if (data && data.Item) {
+        lastState = data.Item.value.S;
+        // re insert the lastState with a time stamp
+        await ddb.putItem({
+          TableName: tableName,
+          Item: { state: { S: String(Date.now()) }, value: { S: lastState } }
+        }).promise();
+      }
+    })
+    .catch(function (err) {
+      console.error('Retrieving state from DynamoDB', err);
+    });
+  // re insert the new state as latest
+  await ddb.putItem({
     TableName: tableName,
-    Item: { state: 'state', value: body }
-  };
-
-  const result = await docClient.put(params).promise();
-  if (!result) {
-    console.error('massive error occurred while connecting to db');
-  }
+    Item: { state: { S: 'latest' }, value: { S: event.body } }
+  }).promise();
 
   const response = {
     statusCode: 200,
-    body: JSON.stringify(body)
+    body: event.body
   };
 
-  // All log statements are written to CloudWatch
-  console.info(`response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`);
   return response;
 };

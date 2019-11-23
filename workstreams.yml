@@ -1,0 +1,223 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: workstreams
+Transform:
+- AWS::Serverless-2016-10-31
+Parameters:
+  TableName:
+    Type: String
+    Default: WorkStreamsTable
+    Description: Payment workstreamsTable database Table
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - prod
+    Description: Application development environments
+Mappings:
+  EnvMappings:
+    dev:
+      region: eu-west-1
+      url: workstreams.dev.travcorpservices.com
+      hostedZoneName: dev.travcorpservices.com.
+      certificateArn: arn:aws:acm:us-east-1:236731556556:certificate/d2724ea5-bf47-46aa-bd38-bdb5c8f1b419
+    prod:
+      region: eu-west-1
+      url: workstreams.qa.travcorpservices.com
+      hostedZoneName: qa.travcorpservices.com.
+      certificateArn: arn:aws:acm:us-east-1:955830326938:certificate/406b5d40-4faa-4de0-ace9-bf14e4846333
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 128
+    Runtime: nodejs10.x
+    Environment:
+      Variables:
+        ENV_NAME:
+          Ref: Environment
+        REGION:
+          Fn::FindInMap:
+          - EnvMappings
+          - Ref: Environment
+          - region
+        WORK_STREAMS_TABLE:
+          Ref: WorkStreamsTable
+Resources:
+  WorkSreamsGetUiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Join:
+        - '-'
+        - - WorkSreamsGetUiFunction
+          - Ref: Environment
+      CodeUri: s3://workstreams-dev/f93e67ac8accb06451dd6f45640f02fb
+      Handler: app.handler
+      Role:
+        Fn::GetAtt:
+        - WorkStreamsDynamoDBExecutionRole
+        - Arn
+      Description: An HTTP get method to return the ui.
+      Events:
+        WorkStreamsApi:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+  WorkSreamsGetStateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Join:
+        - '-'
+        - - WorkSreamsGetStateFunction
+          - Ref: Environment
+      CodeUri: s3://workstreams-dev/9fc6ba6732de18fc1b719b5e6c86288f
+      Handler: app.handler
+      Role:
+        Fn::GetAtt:
+        - WorkStreamsDynamoDBExecutionRole
+        - Arn
+      Description: An HTTP get method to get all latest state from a DynamoDB table.
+      Events:
+        WorkStreamsApi:
+          Type: Api
+          Properties:
+            Path: /state
+            Method: GET
+  WorkSreamsSaveStateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Join:
+        - '-'
+        - - WorkSreamsSaveStateFunction
+          - Ref: Environment
+      CodeUri: s3://workstreams-dev/12094eef5bcd5b115f273d640ca3d141
+      Handler: app.handler
+      Role:
+        Fn::GetAtt:
+        - WorkStreamsDynamoDBExecutionRole
+        - Arn
+      Description: An HTTP post method to save state DynamoDB table.
+      Events:
+        WorkStreamsApi:
+          Type: Api
+          Properties:
+            Path: /state
+            Method: POST
+  WorkStreamsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: WorkStreamsTable
+      PrimaryKey:
+        Name: state
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+  WorkStreamsDynamoDBExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: lambdaPolicyDynamoDB
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: '*'
+  DomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn:
+        Fn::FindInMap:
+        - EnvMappings
+        - Ref: Environment
+        - certificateArn
+      DomainName:
+        Fn::FindInMap:
+        - EnvMappings
+        - Ref: Environment
+        - url
+  UrlMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn:
+    - ServerlessRestApi
+    Properties:
+      DomainName:
+        Ref: DomainName
+      RestApiId:
+        Fn::Sub: ${ServerlessRestApi}
+      Stage: Stage
+  WorkStreamsDNS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Comment: route53 record set for the payment proxy.
+      HostedZoneName:
+        Fn::FindInMap:
+        - EnvMappings
+        - Ref: Environment
+        - hostedZoneName
+      Name:
+        Fn::FindInMap:
+        - EnvMappings
+        - Ref: Environment
+        - url
+      Type: CNAME
+      TTL: '300'
+      ResourceRecords:
+      - Fn::GetAtt:
+        - DomainName
+        - DistributionDomainName
+Outputs:
+  WorkStreamsApi:
+    Description: API Gateway endpoint URL
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Fn::FindInMap:
+          - EnvMappings
+          - Ref: Environment
+          - url
+  WorkSreamsGetUiFunction:
+    Description: Checkout Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - WorkSreamsGetUiFunction
+      - Arn
+  WorkSreamsGetStateFunction:
+    Description: Charges Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - WorkSreamsGetStateFunction
+      - Arn
+  WorkSreamsSaveStateFunction:
+    Description: User interface Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - WorkSreamsSaveStateFunction
+      - Arn

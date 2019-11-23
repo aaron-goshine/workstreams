@@ -1,95 +1,178 @@
-# This is the SAM template that represents the architecture of your serverless application
-# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
-
-# The AWSTemplateFormatVersion identifies the capabilities of the template
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   workstreams
 
-# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
 Transform:
 - AWS::Serverless-2016-10-31
 
-# Resources declares the AWS resources that you want to include in the stack
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Parameters:
+  TableName:
+    Type: String
+    Default: WorkStreamsTable
+    Description: Payment workstreamsTable database Table
+
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    Description: Application development environments
+
+Mappings:
+  EnvMappings:
+    dev:
+      region: eu-west-1
+      url: workstreams.dev.travcorpservices.com
+      hostedZoneName: "dev.travcorpservices.com."
+      certificateArn: 'arn:aws:acm:us-east-1:236731556556:certificate/d2724ea5-bf47-46aa-bd38-bdb5c8f1b419'
+    prod:
+      region: eu-west-1
+      url: workstreams.qa.travcorpservices.com
+      hostedZoneName: "qa.travcorpservices.com."
+      certificateArn: 'arn:aws:acm:us-east-1:955830326938:certificate/406b5d40-4faa-4de0-ace9-bf14e4846333'
+
+Globals:
+    Function:
+      Timeout: 60
+      MemorySize: 128
+      Runtime: nodejs10.x
+      Environment:
+        Variables:
+          ENV_NAME: !Ref Environment
+          REGION: !FindInMap [ EnvMappings, !Ref Environment, region ]
+          WORK_STREAMS_TABLE: !Ref WorkStreamsTable
 Resources:
-  # Each Lambda function is defined by properties:
-  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-  GetUiHTMLFunction:
+  WorkSreamsGetUiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: streams-ui/app.handler
-      Runtime: nodejs10.x
-      MemorySize: 128
-      Timeout: 100
+      FunctionName: !Join [ '-', [ 'WorkSreamsGetUiFunction' , !Ref Environment ] ]
+      CodeUri: streams-ui/
+      Handler: app.handler
+      Role: !GetAtt [ WorkStreamsDynamoDBExecutionRole, Arn ]
       Description: An HTTP get method to return the ui.
       Events:
-        Api:
+        WorkStreamsApi:
           Type: Api
           Properties:
             Path: /
             Method: GET
 
-
-  # This is a Lambda function config associated with the source code: get-all-items.js
-  GetAllItemsFunction:
+  WorkSreamsGetStateFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: streams-get/app.handler
-      Runtime: nodejs10.x
-      MemorySize: 128
-      Timeout: 100
+      FunctionName: !Join [ '-', [ 'WorkSreamsGetStateFunction' , !Ref Environment ] ]
+      CodeUri: streams-get/
+      Handler: app.handler
+      Role: !GetAtt [ WorkStreamsDynamoDBExecutionRole, Arn ]
       Description: An HTTP get method to get all latest state from a DynamoDB table.
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref WorkStreamsTables
-      Environment:
-        Variables:
-          WORK_STREAMS_TABLE: !Ref WorkStreamsTables
       Events:
-        Api:
+        WorkStreamsApi:
           Type: Api
           Properties:
             Path: /state
             Method: GET
 
-  SaveStateFunction:
+  WorkSreamsSaveStateFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: streams-save/app.handler 
-      Runtime: nodejs10.x
-      MemorySize: 128
-      Timeout: 100
+      FunctionName: !Join [ '-', [ 'WorkSreamsSaveStateFunction' , !Ref Environment ] ]
+      CodeUri: streams-save/
+      Handler: app.handler 
+      Role: !GetAtt [ WorkStreamsDynamoDBExecutionRole, Arn ]
       Description: An HTTP post method to save state DynamoDB table.
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref WorkStreamsTables
-      Environment:
-        Variables:
-          WORK_STREAMS_TABLE: !Ref WorkStreamsTables
       Events:
-        Api:
+        WorkStreamsApi:
           Type: Api
           Properties:
             Path: /state
             Method: POST
-  # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
-  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
 
-  # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
-  WorkStreamsTables:
+  WorkStreamsTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
+      TableName: WorkStreamsTable
       PrimaryKey:
-        Name: id
+        Name: state
         Type: String
       ProvisionedThroughput:
         ReadCapacityUnits: 2
         WriteCapacityUnits: 2
 
+  WorkStreamsDynamoDBExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Policies:
+          -
+            PolicyName: lambdaPolicyDynamoDB
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:GetItem
+                    - dynamodb:PutItem
+                    - dynamodb:UpdateItem
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: "*"
+
+  DomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn: !FindInMap [ EnvMappings, !Ref Environment, certificateArn ]
+      DomainName: !FindInMap [ EnvMappings, !Ref Environment, url ]
+
+  UrlMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn:
+      - ServerlessRestApi
+    Properties:
+      DomainName: !Ref DomainName
+      RestApiId: !Sub ${ServerlessRestApi}
+      Stage: Stage
+
+  WorkStreamsDNS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Comment: route53 record set for the payment proxy.
+      HostedZoneName: !FindInMap [ EnvMappings, !Ref Environment, hostedZoneName ]
+      Name: !FindInMap [ EnvMappings, !Ref Environment, url ]
+      Type: CNAME
+      TTL: '300'
+      ResourceRecords:
+      - !GetAtt DomainName.DistributionDomainName
+
 Outputs:
-  WebEndpoint:
-    Description: "API Gateway endpoint URL for Prod stage"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  WorkStreamsApi:
+    Description: "API Gateway endpoint URL"
+    Value:  !Join [ '', [ 'https://' , !FindInMap [ EnvMappings, !Ref Environment, url ] ] ]
+
+  WorkSreamsGetUiFunction:
+    Description: "Checkout Lambda Function ARN"
+    Value: !GetAtt WorkSreamsGetUiFunction.Arn
+
+  WorkSreamsGetStateFunction:
+    Description: "Charges Lambda Function ARN"
+    Value: !GetAtt WorkSreamsGetStateFunction.Arn
+
+  WorkSreamsSaveStateFunction:
+    Description: "User interface Lambda Function ARN"
+    Value: !GetAtt WorkSreamsSaveStateFunction.Arn
