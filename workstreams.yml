@@ -31,6 +31,7 @@ Globals:
     Timeout: 60
     MemorySize: 128
     Runtime: nodejs10.x
+    Tracing: Active
     Environment:
       Variables:
         ENV_NAME:
@@ -42,6 +43,7 @@ Globals:
           - region
         WORK_STREAMS_TABLE:
           Ref: WorkStreamsTable
+        MAGIC_KEY: magicKey
 Resources:
   WorkSreamsGetUiFunction:
     Type: AWS::Serverless::Function
@@ -51,11 +53,11 @@ Resources:
         - '-'
         - - WorkSreamsGetUiFunction
           - Ref: Environment
-      CodeUri: s3://workstreams-dev/f93e67ac8accb06451dd6f45640f02fb
+      CodeUri: s3://workstreams-dev/8f34aa4ae7567ef86b851b101daf88e4
       Handler: app.handler
       Role:
         Fn::GetAtt:
-        - WorkStreamsDynamoDBExecutionRole
+        - WorkStreamFunctionsRole
         - Arn
       Description: An HTTP get method to return the ui.
       Events:
@@ -72,11 +74,11 @@ Resources:
         - '-'
         - - WorkSreamsGetStateFunction
           - Ref: Environment
-      CodeUri: s3://workstreams-dev/9fc6ba6732de18fc1b719b5e6c86288f
+      CodeUri: s3://workstreams-dev/dd51b0a57267353665dfcbd22e14ca9b
       Handler: app.handler
       Role:
         Fn::GetAtt:
-        - WorkStreamsDynamoDBExecutionRole
+        - WorkStreamFunctionsRole
         - Arn
       Description: An HTTP get method to get all latest state from a DynamoDB table.
       Events:
@@ -93,11 +95,11 @@ Resources:
         - '-'
         - - WorkSreamsSaveStateFunction
           - Ref: Environment
-      CodeUri: s3://workstreams-dev/12094eef5bcd5b115f273d640ca3d141
+      CodeUri: s3://workstreams-dev/18086545c7a03f38553e196efc60f26c
       Handler: app.handler
       Role:
         Fn::GetAtt:
-        - WorkStreamsDynamoDBExecutionRole
+        - WorkStreamFunctionsRole
         - Arn
       Description: An HTTP post method to save state DynamoDB table.
       Events:
@@ -116,7 +118,7 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 2
         WriteCapacityUnits: 2
-  WorkStreamsDynamoDBExecutionRole:
+  WorkStreamFunctionsRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -129,7 +131,7 @@ Resources:
           Action:
           - sts:AssumeRole
       Policies:
-      - PolicyName: lambdaPolicyDynamoDB
+      - PolicyName: WorkstreamsLambdaPolicy
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -148,6 +150,14 @@ Resources:
             - logs:CreateLogGroup
             - logs:CreateLogStream
             - logs:PutLogEvents
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - xray:*
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - ssm:GetParameter*
             Resource: '*'
   DomainName:
     Type: AWS::ApiGateway::DomainName
@@ -192,6 +202,13 @@ Resources:
       - Fn::GetAtt:
         - DomainName
         - DistributionDomainName
+  WorkStreamsParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: workstreamsParameters
+      Description: Simple parameters app
+      Type: String
+      Value: '{"magicKey": "value1"}'
 Outputs:
   WorkStreamsApi:
     Description: API Gateway endpoint URL

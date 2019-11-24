@@ -39,12 +39,18 @@ function allowDrop (ev) {
 }
 
 function upateState (newState) {
+  var magicKey = window.localStorage.getItem('magicKey');
+  if (!magicKey) {
+    alert('You will need magic to something like that');
+    return;
+  }
+
   var oReq = new XMLHttpRequest();
   oReq.addEventListener('load', function (response) {
-    console.log(response);
     console.log(this.responseText);
   });
   oReq.open('POST', '/state');
+  oReq.setRequestHeader('X-MAGIC-KEY', magicKey);
   oReq.send(JSON.stringify(newState));
 };
 
@@ -110,15 +116,15 @@ function renderApplication (state) {
     });
 }
 
-window.onload = function () {
-  function reqListener () {
-    var state = JSON.parse(this.responseText);
-    window.streams.state = state;
-    renderApplication(state);
-  }
+function getState () {
+  var state = JSON.parse(this.responseText);
+  window.streams.state = state;
+  renderApplication(state);
+}
 
+window.onload = function () {
   var oReq = new XMLHttpRequest();
-  oReq.addEventListener('load', reqListener);
+  oReq.addEventListener('load', getState);
   oReq.open('GET', '/state');
   oReq.send();
 };

@@ -37,11 +37,14 @@ Globals:
       Timeout: 60
       MemorySize: 128
       Runtime: nodejs10.x
+      Tracing: Active
       Environment:
         Variables:
           ENV_NAME: !Ref Environment
           REGION: !FindInMap [ EnvMappings, !Ref Environment, region ]
           WORK_STREAMS_TABLE: !Ref WorkStreamsTable
+          MAGIC_KEY: 'magicKey'
+
 Resources:
   WorkSreamsGetUiFunction:
     Type: AWS::Serverless::Function
@@ -49,7 +52,7 @@ Resources:
       FunctionName: !Join [ '-', [ 'WorkSreamsGetUiFunction' , !Ref Environment ] ]
       CodeUri: streams-ui/
       Handler: app.handler
-      Role: !GetAtt [ WorkStreamsDynamoDBExecutionRole, Arn ]
+      Role: !GetAtt [ WorkStreamFunctionsRole, Arn ]
       Description: An HTTP get method to return the ui.
       Events:
         WorkStreamsApi:
@@ -64,7 +67,7 @@ Resources:
       FunctionName: !Join [ '-', [ 'WorkSreamsGetStateFunction' , !Ref Environment ] ]
       CodeUri: streams-get/
       Handler: app.handler
-      Role: !GetAtt [ WorkStreamsDynamoDBExecutionRole, Arn ]
+      Role: !GetAtt [ WorkStreamFunctionsRole, Arn ]
       Description: An HTTP get method to get all latest state from a DynamoDB table.
       Events:
         WorkStreamsApi:
@@ -79,7 +82,7 @@ Resources:
       FunctionName: !Join [ '-', [ 'WorkSreamsSaveStateFunction' , !Ref Environment ] ]
       CodeUri: streams-save/
       Handler: app.handler 
-      Role: !GetAtt [ WorkStreamsDynamoDBExecutionRole, Arn ]
+      Role: !GetAtt [ WorkStreamFunctionsRole, Arn ]
       Description: An HTTP post method to save state DynamoDB table.
       Events:
         WorkStreamsApi:
@@ -99,7 +102,7 @@ Resources:
         ReadCapacityUnits: 2
         WriteCapacityUnits: 2
 
-  WorkStreamsDynamoDBExecutionRole:
+  WorkStreamFunctionsRole:
       Type: AWS::IAM::Role
       Properties:
         AssumeRolePolicyDocument:
@@ -113,7 +116,7 @@ Resources:
                 - sts:AssumeRole
         Policies:
           -
-            PolicyName: lambdaPolicyDynamoDB
+            PolicyName: WorkstreamsLambdaPolicy
             PolicyDocument:
               Version: "2012-10-17"
               Statement:
@@ -133,6 +136,14 @@ Resources:
                     - logs:CreateLogStream
                     - logs:PutLogEvents
                   Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - xray:*
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - ssm:GetParameter*
+                  Resource: '*'
 
   DomainName:
     Type: AWS::ApiGateway::DomainName
@@ -159,6 +170,14 @@ Resources:
       TTL: '300'
       ResourceRecords:
       - !GetAtt DomainName.DistributionDomainName
+
+  WorkStreamsParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: 'workstreamsParameters'
+      Description: 'Simple parameters app'
+      Type: String
+      Value: '{"magicKey": "value1"}'
 
 Outputs:
   WorkStreamsApi:

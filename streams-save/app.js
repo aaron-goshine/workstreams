@@ -1,21 +1,28 @@
 var AWS = require('aws-sdk');
 AWS.config.update({ region: process.env.REGION });
 var ddb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
-const tableName = process.env.WORK_STREAMS_TABLE;
+var ssm = new AWS.SSM();
 
+const tableName = process.env.WORK_STREAMS_TABLE;
 exports.handler = async (event) => {
+  const ssmObject = await ssm.getParameter({ Name: 'workstreamsParameters' })
+    .promise();
+
+  if (ssmObject.Parameter.Value !== event.headers['x-magic-key']) {
+    return {
+      statusCode: 403,
+      body: 'you need magic to do that'
+    };
+  }
   let lastState;
   await ddb.getItem({
     Key: { state: { S: 'latest' } },
     TableName: tableName
-  })
-    .promise()
+  }).promise()
     .then(async function (data) {
-      console.log('data', data);
       console.log('Retrieved state from DynamoDB');
       if (data && data.Item) {
         lastState = data.Item.value.S;
-        // re insert the lastState with a time stamp
         await ddb.putItem({
           TableName: tableName,
           Item: { state: { S: String(Date.now()) }, value: { S: lastState } }
@@ -25,6 +32,7 @@ exports.handler = async (event) => {
     .catch(function (err) {
       console.error('Retrieving state from DynamoDB', err);
     });
+
   // re insert the new state as latest
   await ddb.putItem({
     TableName: tableName,
@@ -33,7 +41,7 @@ exports.handler = async (event) => {
 
   const response = {
     statusCode: 200,
-    body: event.body
+    body: event.state
   };
 
   return response;
