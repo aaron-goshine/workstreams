@@ -2,6 +2,14 @@ var AWS = require('aws-sdk');
 AWS.config.update({ region: process.env.REGION });
 
 exports.handler = async (event) => {
+  if (process.env.AWS_SAM_LOCAL) {
+    return {
+      headers: { 'Content-Type': 'application/json' },
+      statusCode: 200,
+      body: JSON.stringify(require('./state'))
+    };
+  }
+
   var ddb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
 
   let params = {

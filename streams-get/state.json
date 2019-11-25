@@ -1,0 +1,72 @@
+{ "usersConfig": [
+  {
+    "name": "Aaron Goshine",
+    "nickname": "925",
+    "initial": "AG",
+    "id": "id00",
+    "currentPosition": "0,1"
+  },
+  {
+    "name": "Hemanth Narravula",
+    "nickname": "Heman",
+    "initial": "HN",
+    "id": "id01",
+    "currentPosition": "0,1"
+  },
+  {
+    "name": "Udaya Lekkala",
+    "nickname": "Bujji",
+    "initial": "UL",
+    "id": "id02",
+    "currentPosition": "1,1"
+  },
+  {
+    "name": "Prasanjit Mohanty",
+    "nickname": "Jit",
+    "initial": "PM",
+    "id": "id03",
+    "currentPosition": "1,1"
+  },
+  {
+    "name": "Chris Gordon",
+    "nickname": "Wizzard",
+    "initial": "CG",
+    "id": "id04",
+    "currentPosition": "2,1"
+  },
+  {
+    "name": "Chathura Fernando ",
+    "nickname": "F1",
+    "initial": "CF",
+    "id": "id05",
+    "currentPosition": "2,1"
+  }
+],
+
+"streamConfig": [
+  {
+    "description": "",
+    "title": "Payment Option",
+    "initial": "PP",
+    "id": "sid0"
+  },
+  {
+    "description": "",
+    "title": "Payment Execute",
+    "initial": "PP",
+    "id": "sid1"
+  },
+  {
+    "description": "",
+    "title": "Secret management",
+    "initial": "SM",
+    "id": "sid2"
+  },
+  {
+    "description": "",
+    "title": "Business as usual",
+    "initial": "BAU",
+    "id": "sid3"
+
+  }]
+}

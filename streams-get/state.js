@@ -3,58 +3,71 @@ module.exports = { usersConfig: [
     'name': 'Aaron Goshine',
     'nickname': 'Gosh',
     'initial': 'AG',
-    'id': 'id01',
+    'id': 'id00',
     'currentPosition': '0,1'
   },
   {
     'name': 'Hemanth Narravula',
     'nickname': 'Heman',
     'initial': 'HN',
-    'id': 'id02',
+    'id': 'id01',
     'currentPosition': '0,1'
   },
   {
     'name': 'Udaya Lekkala',
     'nickname': 'Bujji',
     'initial': 'UL',
-    'id': 'id03',
+    'id': 'id02',
     'currentPosition': '1,1'
   },
   {
     'name': 'Prasanjit Mohanty',
     'nickname': 'Jit',
     'initial': 'PM',
-    'id': 'id04',
+    'id': 'id03',
     'currentPosition': '1,1'
   },
   {
     'name': 'Chris Gordon',
     'nickname': 'Wizzard',
     'initial': 'CG',
-    'id': 'id05',
+    'id': 'id04',
     'currentPosition': '2,1'
   },
   {
     'name': 'Chathura Fernando ',
     'nickname': 'Nandos',
     'initial': 'CF',
-    'id': 'id06',
+    'id': 'id05',
     'currentPosition': '2,1'
   }
 ],
 
 streamConfig: [
-  { 'description': 'Payment Option',
-    'initial': 'PP'
+  {
+    'description': '',
+    'title': 'Payment Option',
+    'initial': 'PP',
+    'id': 'sid0'
   },
-  { 'description': 'Payment Execute',
-    'initial': 'PP'
+  {
+    'description': '',
+    'title': 'Payment Execute',
+    'initial': 'PP',
+    'id': 'sid1'
   },
-  { 'description': 'Secret management',
-    'initial': 'SM'
+  {
+    'description': '',
+    'title': 'Secret management',
+    'initial': 'SM',
+    'id': 'sid2'
   },
-  { 'description': 'Business as usual',
-    'initial': 'BAU'
+  {
+    'description': '',
+    'title': 'Business as usual',
+    'initial': 'BAU',
+    'id': 'sid3'
+
   }
 ]
 };

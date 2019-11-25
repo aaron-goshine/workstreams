@@ -62,20 +62,22 @@ function allowDrop (ev) {
   ev.preventDefault();
 }
 
-function upateState (newState) {
+function upateState (refresh) {
   var magicKey = window.localStorage.getItem('magicKey');
   if (!magicKey) {
     alert('You will need magic to something like that');
     return;
   }
-
   var oReq = new XMLHttpRequest();
   oReq.addEventListener('load', function (response) {
     console.log(this.responseText);
+    if (refresh) {
+      window.location.reload();
+    }
   });
   oReq.open('POST', '/state');
   oReq.setRequestHeader('X-MAGIC-KEY', magicKey);
-  oReq.send(JSON.stringify(newState));
+  oReq.send(JSON.stringify(window.streams.state));
 };
 
 function updateUserPosition (newState) {
@@ -86,7 +88,7 @@ function updateUserPosition (newState) {
     return user;
   });
   window.streams.state.usersConfig = updatedUsersConfig;
-  upateState(window.streams.state);
+  upateState(false);
 }
 
 function renderApplication (state) {
@@ -95,8 +97,8 @@ function renderApplication (state) {
   var streamBoxTpl = document.querySelector('#stream-boxes');
   state.streamConfig.forEach(function (stream) {
     var streamInfoContent = document.importNode(streamInfoTpl.content, true);
-    streamInfoContent.querySelectorAll('h4')[0].textContent = stream.initial;
-    streamInfoContent.querySelectorAll('.description')[0].textContent = stream.description;
+    streamInfoContent.querySelectorAll('h4')[0].textContent = stream.title;
+    streamInfoContent.querySelectorAll('h4')[0].setAttribute('id', stream.id);
     var streamList = document.querySelector('#streams-list');
     streamList.appendChild(streamInfoContent);
   });
@@ -130,6 +132,23 @@ function renderApplication (state) {
       });
       item.addEventListener('dragend', function () {
         removeDashBorder();
+      });
+    });
+
+  document.querySelectorAll('.stream-title')
+    .forEach(function (item) {
+      item.addEventListener('dblclick', function (event) {
+        var newTitle = window.prompt('New title for stream');
+        if (newTitle && newTitle.length > 0) {
+          var streamId = event.currentTarget.getAttribute('id');
+          window.streams.state.streamConfig = window.streams.state.streamConfig.map(function (stream) {
+            if (stream.id === streamId) {
+              stream.title = newTitle;
+            }
+            return stream;
+          });
+          upateState(true);
+        }
       });
     });
 
