@@ -20,6 +20,11 @@ function drag (event) {
   window.streams.lastDraggedItem = document.getElementById(event.target.id);
 }
 
+function isAllowToUpdate (lp, np) {
+  return ((lp[1] === np[1] && np[0] === (lp[0] + 1)) ||
+    (lp[1] !== np[1] && np[0] === 0));
+}
+
 function drop (event) {
   event.preventDefault();
   var pattern = new RegExp('dropbox', 'g');
@@ -28,8 +33,27 @@ function drop (event) {
       'position': event.target.getAttribute('data-position'),
       'userId': window.streams.lastDraggedItem.getAttribute('id')
     };
-    updateUserPosition(newState);
-    event.target.appendChild(window.streams.lastDraggedItem);
+    // restrict dragging
+    var lastUserStateArr = window.streams.state.usersConfig.filter(function (user) {
+      return user.id === newState.userId;
+    });
+
+    var lastPos = lastUserStateArr[0].currentPosition.split(',')
+      .map(function (n) {
+        return parseInt(n, 10);
+      });
+
+    var newPos = newState.position.split(',')
+      .map(function (n) {
+        return parseInt(n, 10);
+      });
+
+    if (isAllowToUpdate(lastPos, newPos)) {
+      updateUserPosition(newState);
+      event.target.appendChild(window.streams.lastDraggedItem);
+    } else {
+      alert('You are not allowed to move markers around randomly');
+    }
   }
   window.streams.lastDraggedItem = null;
 }

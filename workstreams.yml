@@ -53,7 +53,7 @@ Resources:
         - '-'
         - - WorkSreamsGetUiFunction
           - Ref: Environment
-      CodeUri: s3://workstreams-dev/8f34aa4ae7567ef86b851b101daf88e4
+      CodeUri: s3://workstreams-dev/a2a5a18cbd74c69074c2a1393990a7b9
       Handler: app.handler
       Role:
         Fn::GetAtt:
