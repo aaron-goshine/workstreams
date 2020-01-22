@@ -170,4 +170,16 @@ window.onload = function () {
   oReq.addEventListener('load', getState);
   oReq.open('GET', '/state');
   oReq.send();
+
+  // action buttons
+  var addPlayers = document.getElementById('add-player');
+  var editStreams = document.getElementById('edit-streams');
+
+  addPlayers.addEventListener('click', function () {
+    alert('comming soon');
+  }, false);
+
+  editStreams.addEventListener('click', function () {
+    alert('comming soon');
+  }, false);
 };

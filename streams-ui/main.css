@@ -7,6 +7,16 @@
 .main-header {
   padding: 1em;
 }
+.main-header p {
+  padding: 1em;
+  max-width: 70%;
+  min-width: 600px;
+}
+
+.main-header nav ul,
+.main-header h1 {
+  margin: 1em 0;
+}
 
 .main-header nav ul {
   background-color: #ededed;
@@ -18,6 +28,14 @@
   padding: 1em;
   line-height: 2em;
   font-size: 1em;
+  background: silver;
+  cursor: pointer;
+}
+
+.main-header nav ul li:hover {
+  background: #fdfdfd;
+  border-bottom: 1px solid #fdfdfd;
+  box-sizing: border-box;
 }
 
 .col {
