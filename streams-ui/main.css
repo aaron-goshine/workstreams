@@ -5,7 +5,7 @@
 }
 
 .main-header {
-  padding: 1em;
+  padding: 1em; 
 }
 .main-header p {
   padding: 1em;
@@ -38,8 +38,14 @@
   box-sizing: border-box;
 }
 
-.col {
-  border: 1px solid;
+.grid-header {
+  background: #d0d0d0;
+  border-left: 1px solid #b0b0b0;
+  border-right: 1px solid #b0b0b0;
+  padding: 1em;
+  font-size: 1em;
+  font-weight: bold;
+  text-align: center;
 }
 
 .grid-container {
