@@ -171,28 +171,4 @@ window.onload = function () {
   oReq.open('GET', '/state');
   oReq.send();
   // action buttons
-  var addPlayers = document.getElementById('add-player');
-  var editStreams = document.getElementById('edit-streams');
-
-  addPlayers.addEventListener('click', function () {
-    var newPlayer = {
-      'name': null,
-      'nickname': null,
-      'initial': null,
-      'id': null,
-      'currentPosition': '0,1'
-    };
-    console.log(window.streams.state.usersConfig);
-    alert('comming soon');
-  }, false);
-
-  editStreams.addEventListener('click', function () {
-    var newStream = {
-      'description': '',
-      'title': null,
-      'initial': null,
-      'id': null };
-    console.log(window.streams.state.usersConfig);
-    alert('comming soon');
-  }, false);
 };
