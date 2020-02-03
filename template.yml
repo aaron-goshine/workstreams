@@ -91,6 +91,21 @@ Resources:
             Path: /state
             Method: POST
 
+  WorkStreamsOverViewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join [ '-', [ 'WorkStreamsOverViewFunction' , !Ref Environment ] ]
+      CodeUri: cohesion-ui/
+      Handler: app.handler 
+      Role: !GetAtt [ WorkStreamFunctionsRole, Arn ]
+      Description: An HTTP post method to save state DynamoDB table.
+      Events:
+        WorkStreamsApi:
+          Type: Api
+          Properties:
+            Path: /cohesion
+            Method: GET
+
   WorkStreamsTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -195,3 +210,7 @@ Outputs:
   WorkSreamsSaveStateFunction:
     Description: "User interface Lambda Function ARN"
     Value: !GetAtt WorkSreamsSaveStateFunction.Arn
+
+  WorkStreamsOverViewFunction:
+    Description: "User interface Lambda Function ARN"
+    Value: !GetAtt WorkStreamsOverViewFunction.Arn
