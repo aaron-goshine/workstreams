@@ -9,7 +9,11 @@ Parameters:
   TableName:
     Type: String
     Default: WorkStreamsTable
-    Description: Payment workstreamsTable database Table
+    Description: workstreamsTable database Table
+  StatsTableName:
+    Type: String
+    Default: WorkStreamsTableStats
+    Description:  workstreams Stats Table
 
   Environment:
     Type: String
@@ -43,6 +47,7 @@ Globals:
           ENV_NAME: !Ref Environment
           REGION: !FindInMap [ EnvMappings, !Ref Environment, region ]
           WORK_STREAMS_TABLE: !Ref WorkStreamsTable
+          WORK_STREAMS_STATS_TABLE: !Ref WorkStreamsTableStats
           MAGIC_KEY: 'magicKey'
 
 Resources:
@@ -105,6 +110,30 @@ Resources:
           Properties:
             Path: /cohesion
             Method: GET
+ 
+  WorkStreamsGetStatsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join [ '-', [ 'WorkStreamsGetStatsFunction' , !Ref Environment ] ]
+      CodeUri: cohesion-get-stats/
+      Handler: app.handler 
+      Role: !GetAtt [ WorkStreamFunctionsRole, Arn ]
+      Description: An HTTP post method to save state DynamoDB table.
+      Events:
+        WorkStreamsApi:
+          Type: Api
+          Properties:
+            Path: /cohesion/stats
+            Method: GET
+ 
+  WorkStreamsStatsParserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join [ '-', [ 'WorkStreamsStatsParserFunction' , !Ref Environment ] ]
+      CodeUri: cohesion-edges/
+      Handler: app.handler 
+      Role: !GetAtt [ WorkStreamFunctionsRole, Arn ]
+      Description: scan and extract connection.
 
   WorkStreamsTable:
     Type: AWS::Serverless::SimpleTable
@@ -112,6 +141,17 @@ Resources:
       TableName: WorkStreamsTable
       PrimaryKey:
         Name: state
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+
+  WorkStreamsTableStats:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: WorkStreamsTableStats
+      PrimaryKey:
+        Name: linkId
         Type: String
       ProvisionedThroughput:
         ReadCapacityUnits: 2
@@ -140,6 +180,8 @@ Resources:
                     - dynamodb:GetItem
                     - dynamodb:PutItem
                     - dynamodb:UpdateItem
+                    - dynamodb:Scan
+                    - dynamodb:Query
                   Resource: "*"
                 - Effect: Allow
                   Action:
@@ -214,3 +256,11 @@ Outputs:
   WorkStreamsOverViewFunction:
     Description: "User interface Lambda Function ARN"
     Value: !GetAtt WorkStreamsOverViewFunction.Arn
+    
+  WorkStreamsStatsParserFunction:
+    Description: "User interface Lambda Function ARN"
+    Value: !GetAtt WorkStreamsStatsParserFunction.Arn
+    
+  WorkStreamsGetStatsFunction:
+    Description: "User interface Lambda Function ARN"
+    Value: !GetAtt WorkStreamsGetStatsFunction.Arn
