@@ -23,9 +23,13 @@ exports.handler = async (event) => {
       console.log('Retrieved state from DynamoDB');
       if (data && data.Item) {
         lastState = data.Item.value.S;
+        let d = new Date();
         await ddb.putItem({
           TableName: tableName,
-          Item: { state: { S: String(Date.now()) }, value: { S: lastState } }
+          Item: { state: {
+            S: String((d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear()) },
+          value: { S: lastState }
+          }
         }).promise();
       }
     })

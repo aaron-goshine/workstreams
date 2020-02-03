@@ -1,125 +1,65 @@
 const AWS = require('aws-sdk');
-  var ddb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
+var ddb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
 
 exports.handler = async (event) => {
+  let params = {
+    TableName: process.env.WORK_STREAMS_TABLE
+  };
 
-  if (process.env.AWS_SAM_LOCAL) {
+  let error;
+  await ddb.scan(params)
+    .promise()
+    .then(async function (data) {
+      console.log('Retrieved state from DynamoDB');
+      let links = {};
+      let uniquePlayers = {};
+      data.Items.forEach(function (item) {
+        let players = JSON.parse(item.value.S).usersConfig;
+        for (var i = 0; i < players.length; i++) {
+          uniquePlayers[players[i].id] = players[i];
+          for (var j = i + 1; j < players.length; j++) {
+            let s1 = players[i].currentPosition.split(',')[1];
+            let s2 = players[j].currentPosition.split(',')[1];
+
+            if (s1 === s2) {
+              let uniqueId = players[i].id + '-' + players[j].id;
+              if (links[uniqueId]) {
+                links[uniqueId].weight++;
+              } else {
+                links[uniqueId] = {
+                  linksId: uniqueId,
+                  source: players[i].id,
+                  target: players[j].id,
+                  weight: 1
+                };
+              }
+            }
+          }
+        }
+      });
+
+      var value = { S: JSON.stringify({ players: uniquePlayers, links: links }) };
+      await ddb.putItem({
+        TableName: process.env.WORK_STREAMS_STATS_TABLE,
+        Item: { linkId: { S: 'latest' }, value: value }
+      }).promise();
+    })
+    .catch(function (err) {
+      console.error('Retrieving state from DynamoDB', err);
+      error = err;
+    });
+
+  if (error) {
+    return {
+      statusCode: 404,
+      headers: { 'Content-Type': 'application/json' },
+      body: `{"message": ${error}}`
+    };
+  } else {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: `{ "time": "00:30:00", "status": 'inactive', 'id': '001'}`
+      body: `{}`
     };
   }
-
-  //
-  // if (event.pathParameters && event.pathParameters.targetId) {
-  //   let item = {};
-  //
-  //   let params = {
-  //     Key: { : { S: event.pathParameters.targetId } },
-  //     TableName: process.env.WORK_STREAMS_TABLE
-  //   };
-  //
-  //   await ddb.getItem(params)
-  //     .promise()
-  //     .then(function (data) {
-  //       console.log('Retrieved state from DynamoDB');
-  //       console.log(data);
-  //       item = data.Item;
-  //     })
-  //     .catch(function (err) {
-  //       console.error('Retrieving state from DynamoDB', err);
-  //       item = err;
-  //     });
-  //
-  //   if (item.targetDate) {
-  //     var formattedDate = displayFormatter(
-  //       item.targetDate.S,
-  //       parseInt(item.duration.S),
-  //       (item.ticking.S === 'true')
-  //     );
-  //
-  //     var status = '';
-  //     if (item.ticking.S === 'true' && formattedDate === '00:00:00') {
-  //       status = 'inactive';
-  //     } else if (item.ticking.S === 'true' && formattedDate !== '00:00:00') {
-  //       status = 'active';
-  //     } else if (item.ticking.S === 'false') {
-  //       status = 'frozen';
-  //     }
-  //
-  //     return {
-  //       statusCode: 200,
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: `{
-  //       "time": "${formattedDate}",
-  //       "id": "${item.target.S}",
-  //       "status": "${status}"
-  //     }`
-  //     };
-  //   }
-  //
-  //   return {
-  //     statusCode: 404,
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: `{ "time": "", "active": false}`
-  //   };
-  // }
-  //
-  // let params = {
-  //   ExpressionAttributeValues: {
-  //     ':t': { S: 'target' }
-  //   },
-  //   FilterExpression: 'begins_with(target, :t)',
-  //   TableName: process.env.DIFFUSER_TABLE
-  // };
-  // let returnItems = [];
-  // let error;
-  // await ddb.scan(params)
-  //   .promise()
-  //   .then(function (data) {
-  //     console.log('Retrieved state from DynamoDB');
-  //     console.log(data);
-  //     data.Items.forEach(function (item) {
-  //       var formattedDate = displayFormatter(
-  //         item.targetDate.S,
-  //         parseInt(item.duration.S),
-  //         (item.ticking.S === 'true')
-  //       );
-  //
-  //       var status = '';
-  //       if (item.ticking.S === 'true' && formattedDate === '00:00:00') {
-  //         status = 'inactive';
-  //       } else if (item.ticking.S === 'true' && formattedDate !== '00:00:00') {
-  //         status = 'active';
-  //       } else if (item.ticking.S === 'false') {
-  //         status = 'frozen';
-  //       }
-  //
-  //       returnItems.push({
-  //         'name': item.name.S,
-  //         'time': formattedDate,
-  //         'status': status,
-  //         'id': item.target.S
-  //       });
-  //     });
-  //   })
-  //   .catch(function (err) {
-  //     console.error('Retrieving state from DynamoDB', err);
-  //     error = err;
-  //   });
-  //
-  // if (error) {
-  //   return {
-  //     statusCode: 404,
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: `{ "time": "00:00:00", "status": "inactive"}`
-  //   };
-  // } else {
-  //   return {
-  //     statusCode: 200,
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify(returnItems)
-  //   };
-  // }
 };
