@@ -23,9 +23,11 @@ window.onload = function () {
 
     players.forEach(function (d, i) {
       let position = {};
-      let angle = Math.PI / players.length;
-      position.x = w / 2 + Math.sin(angle + i) * w / 3;
-      position.y = h / 2 + Math.cos(angle + i) * h / 3;
+      let angle = ((360 / players.length) * i) * Math.PI / 180;
+      let x = (w / 2) + Math.cos(angle) * (w / 3);
+      let y = (h / 2) + Math.sin(angle) * (h / 3);
+      position.x = x;
+      position.y = y;
       players[i]['position'] = position;
     });
 
