@@ -134,6 +134,12 @@ Resources:
       Handler: app.handler 
       Role: !GetAtt [ WorkStreamFunctionsRole, Arn ]
       Description: scan and extract connection.
+      Events:
+        WorkStreamsApi:
+          Type: Api
+          Properties:
+            Path: /cohesion/stats-refresh
+            Method: GET
 
   WorkStreamsTable:
     Type: AWS::Serverless::SimpleTable
