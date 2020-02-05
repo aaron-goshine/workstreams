@@ -17,6 +17,10 @@ window.onload = function () {
 
     let players = Object.values(data.players);
     let links = Object.values(data.links);
+    let linksAverage = 0;
+    links.forEach(function (item) {
+      linksAverage += (item.weight / links.length);
+    });
     players = players.sort(function (a, b) {
       return a.id > b.id;
     });
@@ -35,7 +39,18 @@ window.onload = function () {
       .data(links)
       .enter()
       .append('svg:line')
-      .attr('class', 'link')
+      .attr('stroke', function (d) {
+        linksAverage = Math.round(linksAverage);
+        if (d.weight > (linksAverage * 2)) {
+          return 'red';
+        }
+
+        if (d.weight < (linksAverage / 2)) {
+          return '#cfcfcf';
+        }
+
+        return 'green';
+      })
       .attr('x1', function (d, i) {
         var player = players.find(function (item) {
           return item.id === d.source;
@@ -66,8 +81,7 @@ window.onload = function () {
       })
       .attr('stroke-width', function (d, i) {
         return d.weight;
-      })
-      .style('stroke', '#CCC');
+      });
 
     var node = vis.selectAll('g.node')
       .data(players)
