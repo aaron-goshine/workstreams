@@ -14,12 +14,20 @@ exports.handler = async (event) => {
       let links = {};
       let uniquePlayers = {};
       data.Items.forEach(function (item) {
-        let players = JSON.parse(item.value.S).usersConfig;
+        let jsonItem = JSON.parse(item.Value.S);
+        let players = jsonItem.usersConfig;
+        let discardedIndex = jsonItem.streamConfig.findIndex(function (stream) {
+          return stream.title === 'OFF';
+        });
+
         for (var i = 0; i < players.length; i++) {
           uniquePlayers[players[i].id] = players[i];
           for (var j = i + 1; j < players.length; j++) {
             let s1 = players[i].currentPosition.split(',')[1];
             let s2 = players[j].currentPosition.split(',')[1];
+            if (discardedIndex === s1 || discardedIndex === s2) {
+              continue;
+            }
 
             if (s1 === s2) {
               let uniqueId = players[i].id + '-' + players[j].id;
