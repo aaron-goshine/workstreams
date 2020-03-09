@@ -14,7 +14,7 @@ exports.handler = async (event) => {
       let links = {};
       let uniquePlayers = {};
       data.Items.forEach(function (item) {
-        let jsonItem = JSON.parse(item.Value.S);
+        let jsonItem = JSON.parse(item.value.S);
         let players = jsonItem.usersConfig;
         let discardedIndex = jsonItem.streamConfig.findIndex(function (stream) {
           return stream.title === 'OFF';

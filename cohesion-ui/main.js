@@ -80,7 +80,7 @@ window.onload = function () {
         return player.position.y;
       })
       .attr('stroke-width', function (d, i) {
-        return d.weight;
+        return d.weight - Math.round(d.weight * 0.2);
       });
 
     var node = vis.selectAll('g.node')
